@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "spear_queue",
+    "spear_job_api",
 ]
 
 MIDDLEWARE = [
@@ -110,7 +111,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Amsterdam"
 
 USE_I18N = True
 
@@ -131,3 +132,4 @@ CELERY_BROKER_URL = os.environ.get(
     "CELERY_BROKER", "amqp://guest:guest@rabbitmq:5672//"
 )
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://redis:6379/0")
+CELERY_TIMEZONE = "Europe/Amsterdam"

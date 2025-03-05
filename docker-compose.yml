@@ -61,7 +61,7 @@ services:
       args:
         - DEV=true
     command: >
-      celery -A app worker --hostname=worker-spear-serverA@%h --loglevel=info --concurrency=1
+      celery -A app worker --hostname=worker-spear-serverA@%h --loglevel=info --concurrency=1 -E
     volumes:
       - ./app:/app
     environment:
@@ -75,7 +75,7 @@ services:
       args:
         - DEV=true
     command: >
-      celery -A app worker --hostname=worker-spear-serverB@%h --loglevel=info --concurrency=1
+      celery -A app worker --hostname=worker-spear-serverB@%h --loglevel=info --concurrency=1 -E
     volumes:
       - ./app:/app
     environment:

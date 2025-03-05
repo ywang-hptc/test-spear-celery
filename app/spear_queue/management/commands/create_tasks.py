@@ -12,6 +12,6 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.SUCCESS(f"Starting task with priority {priority}...")
             )
-            spear_job.apply_async(args=[priority], priority=priority)
+            spear_job.apply_async(args=[priority, {"params": "foo"}], priority=priority)
 
             self.stdout.write(self.style.SUCCESS("Task added to queue"))
