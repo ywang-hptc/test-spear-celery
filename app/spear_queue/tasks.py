@@ -1,9 +1,11 @@
-from spear_job_api.models import SpearJob
+import os
+import time
+from django.utils import timezone
 import celery.signals as celery_signals
 from celery import shared_task, Task
-import time
 from typing import Any
 import logging
+from spear_job_api.models import SpearJob
 
 # set basic config for a logger
 logger = logging.getLogger(__name__)
@@ -26,7 +28,6 @@ def handle_task_before_task_publish(
     sender=None, headers: Any = None, body: dict[str, Any] = None, **_kwargs
 ):
     logger.info(f"Task before task pubish: {headers=} {body=}")
-    print(f"Task before task pubish: {headers=} {body=}")
 
 
 @celery_signals.after_task_publish.connect(
@@ -36,18 +37,25 @@ def handle_task_after_task_publish(
     sender=None, headers: Any = None, body: dict[str, Any] = None, **_kwargs
 ):
     logger.info(f"Task after task pubish: {headers=} {body=}")
-    SpearJob.objects.create(
-        params=body[1]["params"],
-        priority=body[1]["priority"],
-        celery_job_id=headers["id"],
-    )
+    # SpearJob.objects.create(
+    #     params=body[1]["params"],
+    #     priority=body[1]["priority"],
+    #     celery_job_id=headers["id"],
+    # )
 
 
 @celery_signals.task_prerun.connect(sender=spear_job)
 def handle_task_prerun(
     task_id: str, task: Any, args: list[Any], kwargs: dict[str, Any], **_kwargs
 ):
-    logger.info(f"Task before task run: {task_id=}")
+    worker = os.environ.get("WORKER_NAME")
+    logger.info(f"Task before task run: {task_id=}, {worker=}")
+    # job = SpearJob.objects.filter(celery_job_id=task_id).update(
+    #     started_at=timezone.now(),
+    #     status="RUNNING",
+    #     worker_name=os.environ.get("WORKER_NAME"),
+    # )
+    # job.save()
 
 
 @celery_signals.task_postrun.connect(sender=spear_job)
@@ -60,11 +68,17 @@ def handle_task_postrun(
     state: str,
     **_kwargs,
 ):
-    logger.info(f"Task after task run: {task_id=}, {state=}, {retval=}")
+    worker = os.environ.get("WORKER_NAME")
+    logger.info(f"Task after task run: {task_id=}, {state=}, {retval=}, {worker=}")
+    # job = SpearJob.objects.filter(celery_job_id=task_id).update(
+    #     completed_at=timezone.now(),
+    #     status=state,
+    #     result=retval,
+    # )
+    # job.save()
 
 
-body = (
-    [5, {"params": "foo"}],
-    {},
-    {"callbacks": None, "errbacks": None, "chain": None, "chord": None},
-)
+@celery_signals.celeryd_after_setup.connect
+def setup_direct_queue(sender, instance, **kwargs):
+    os.environ["WORKER_NAME"] = f"{sender}"
+    logger.info(f"Worker name: {os.environ['WORKER_NAME']}")
