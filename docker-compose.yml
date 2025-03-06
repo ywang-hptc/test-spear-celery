@@ -51,7 +51,7 @@ services:
     environment:
       - ALLOWED_HOSTS=localhost,127.0.0.1
     depends_on:
-      - django
+      - app
       - rabbitmq
 
   celery-worker1:
