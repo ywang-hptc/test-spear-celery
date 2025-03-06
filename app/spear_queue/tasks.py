@@ -53,7 +53,10 @@ def handle_task_after_task_publish(
         json=payload,
         headers=request_headers,
     )
-    logger.info(f"Response: {response.status_code=} {response.text=}")
+    logger.info(
+        f"Response after_task_publish: {response.status_code=} {response.text=}"
+    )
+    time.sleep(5)
 
 
 @celery_signals.task_prerun.connect(sender=spear_job)
@@ -63,7 +66,23 @@ def handle_task_prerun(
     worker = os.environ.get("WORKER_NAME")
     logger.info(f"Task before task run: {task_id=}, {worker=}")
 
-    # TODO: Filter by celery_job_id (task_id) and update the job status to "RUNNING"
+    payload = {
+        "status": "RUNNING",
+        # "started_at": timezone.now(),
+        # "worker_name": worker,
+    }
+    request_headers = {
+        "accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    response = requests.patch(
+        f"http://app:8080/api/spear_job/spear-jobs/{task_id}/",
+        json=payload,
+        headers=request_headers,
+    )
+    logger.info(f"Response prerun: {response.status_code=} {response.text=}")
+
+    # TODO: prerun is not triggered? it seems the order is wrong: before task run is after task after publish, probably the request is too slow?
     # TODO: And started_at
     # TODO: And worker name
 

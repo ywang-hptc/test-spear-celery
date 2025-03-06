@@ -108,6 +108,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+DEFAULT_AUTHENTICATION_CLASSES = [
+    # 'rest_framework.authentication.SessionAuthentication',
+    "rest_framework.authentication.BasicAuthentication",
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -118,7 +122,7 @@ TIME_ZONE = "Europe/Amsterdam"
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
