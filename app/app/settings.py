@@ -26,7 +26,7 @@ SECRET_KEY = "django-insecure-l5il-gkhm@s-y7c@ch21qzvbmtv*x&&eazqq9k9(zwjp^)2nzj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["app", "localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",  # to enable restful api
+    "rest_framework.authtoken",
+    "drf_spectacular",  # For drf_spectacular to generate schema"
     "spear_queue",
     "spear_job_api",
 ]
@@ -134,3 +137,6 @@ CELERY_BROKER_URL = os.environ.get(
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BACKEND", "redis://redis:6379/0")
 CELERY_TIMEZONE = "Europe/Amsterdam"
 CELERY_ENABLE_UTC = False
+
+
+REST_FRAMEWORK = {"DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema"}
