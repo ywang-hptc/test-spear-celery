@@ -20,10 +20,10 @@ class SpearJob(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.worker_name:
-            self.sever_name = ""
+            self.server_name = ""
 
         elif "servera" in self.worker_name.lower():
-            elf.server_name = "SPEAR Server A"
+            self.server_name = "SPEAR Server A"
 
         elif "serverb" in self.worker_name.lower():
             self.server_name = "SPEAR Server B"
