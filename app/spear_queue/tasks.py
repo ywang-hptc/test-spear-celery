@@ -22,14 +22,7 @@ def spear_job(priority: int, params: dict[str, Any]) -> str:
     time.sleep(5)
     logger.info(f"Running a spear job with priority {priority}")
     # raise RuntimeError("This is a test error")
-    return f"Finish with priority {priority}"
-
-
-# @celery_signals.before_task_publish.connect(sender="spear_queue.tasks.spear_job")
-# def handle_task_before_task_publish(
-#     sender=None, headers: Any = None, body: dict[str, Any] = None, **_kwargs
-# ):
-#     logger.info(f"Task before task pubish: {headers=} {body=}")
+    return f"Finish with priority {priority}, protocol: {params.get('protocol')}"
 
 
 @celery_signals.after_task_publish.connect(
@@ -46,24 +39,6 @@ def handle_task_after_task_publish(
         kwargs=headers["kwargsrepr"],
     )
     logger.info(f"After task publish handler: Created spear job: {spear_job=}")
-    # payload = {
-    #     "priority": body[1]["priority"],
-    #     "celery_job_id": headers["id"],
-    #     "args": headers["argsrepr"],
-    #     "kwargs": headers["kwargsrepr"],
-    # }
-    # request_headers = {
-    #     "accept": "application/json",
-    #     "Content-Type": "application/json",
-    # }
-    # response = requests.post(
-    #     "http://app:8080/api/spear_job/spear-jobs/",
-    #     json=payload,
-    #     headers=request_headers,
-    # )
-    # logger.info(
-    #     f"Response after_task_publish: {response.status_code=} {response.text=}"
-    # )
 
 
 @celery_signals.task_prerun.connect(sender=spear_job)
@@ -83,7 +58,7 @@ def handle_task_prerun(
         "Content-Type": "application/json",
     }
     response = requests.patch(
-        f"http://app:8080/api/spear_job/spear-jobs/{task_id}/",
+        f"http://{os.environ["QUEUE_API_HOST"]}:{os.environ["QUEUE_API_PORT"]}/api/spear_job/spear-jobs/{task_id}/",
         json=payload,
         headers=request_headers,
     )
@@ -120,7 +95,7 @@ def handle_task_postrun(
         "Content-Type": "application/json",
     }
     response = requests.patch(
-        f"http://app:8080/api/spear_job/spear-jobs/{task_id}/",
+        f"http://{os.environ["QUEUE_API_HOST"]}:{os.environ["QUEUE_API_PORT"]}/api/spear_job/spear-jobs/{task_id}/",
         json=payload,
         headers=request_headers,
     )

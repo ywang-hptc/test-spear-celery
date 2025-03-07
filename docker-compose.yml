@@ -66,6 +66,8 @@ services:
       - ./app:/app
     environment:
       - ALLOWED_HOSTS=localhost,
+      - QUEUE_API_HOST=app
+      - QUEUE_API_PORT=8080
 
 
   celery-worker2:
@@ -80,6 +82,8 @@ services:
       - ./app:/app
     environment:
       - ALLOWED_HOSTS=localhost,
+      - QUEUE_API_HOST=app
+      - QUEUE_API_PORT=8080
 
   flower:
     image: mher/flower
