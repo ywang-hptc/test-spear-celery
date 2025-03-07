@@ -55,6 +55,7 @@ services:
       - rabbitmq
 
   celery-worker1:
+    # TODO: create another folder for worker, instead of using the one in django
     container_name: celery-worker1
     build:
       context: .
