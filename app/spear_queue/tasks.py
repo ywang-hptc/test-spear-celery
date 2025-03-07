@@ -18,11 +18,11 @@ logger.addHandler(handler)
 
 
 @shared_task(queue="spear_tasks")
-def spear_job(priority: int, params: dict[str, Any]):
+def spear_job(priority: int, params: dict[str, Any]) -> str:
     time.sleep(5)
     logger.info(f"Running a spear job with priority {priority}")
-    raise RuntimeError("This is a test error")
-    # return f"Finish with priority {priority}"
+    # raise RuntimeError("This is a test error")
+    return f"Finish with priority {priority}"
 
 
 # @celery_signals.before_task_publish.connect(sender="spear_queue.tasks.spear_job")

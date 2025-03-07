@@ -3,7 +3,7 @@ from spear_queue.tasks import spear_job
 
 
 class Command(BaseCommand):
-    help = "Create a task for DEMO"
+    help = "Create 10 tasks for DEMO"
 
     def handle(self, *args, **kwargs):
         # Get the priority from the command arguments
@@ -12,6 +12,9 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.SUCCESS(f"Starting task with priority {priority}...")
             )
-            spear_job.apply_async(args=[priority, {"params": "foo"}], priority=priority)
+            spear_job.apply_async(
+                kwargs={"priority": priority, "params": {"protocol": "test protocol"}},
+                priority=priority,
+            )
 
             self.stdout.write(self.style.SUCCESS("Task added to queue"))
