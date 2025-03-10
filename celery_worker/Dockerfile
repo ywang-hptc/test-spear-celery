@@ -5,39 +5,26 @@ ENV PYTHONUNBUFFERED 1
 
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements.dev.txt /tmp/requirements.dev.txt
-COPY ./app /app
+COPY . /app
 WORKDIR /app
-EXPOSE 8080
 
 # ARG will be overwritten by docker-compose
 ARG DEV=false
 
-# Shell script
-# RUN python -m venv /py && \
-#     /py/bin/pip install --upgrade pip && \
-#     /py/bin/pip install -r /tmp/requirements.txt && \
-#     if [ $DEV = "true" ]; \
-#     then /py/bin/pip install -r /tmp/requirements.dev.txt ; \
-#     fi && \
-#     rm -rf /tmp
 
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
     /py/bin/pip install --upgrade setuptools && \
-    apk add --update --no-cache postgresql-client && \
-    apk add --update --no-cache --virtual .tmp-build-deps \
-    build-base postgresql-dev musl-dev && \
     /py/bin/pip install -r /tmp/requirements.txt && \
     if [ $DEV = "true" ]; \
     then /py/bin/pip install -r /tmp/requirements.dev.txt ; \
     fi && \
     rm -rf /tmp && \
-    apk del .tmp-build-deps && \
     adduser \
     --disabled-password \
     --no-create-home \
-    django-user
+    celery-worker-user
 
 ENV PATH="/py/bin:$PATH"
 
-USER django-user
+USER celery-worker-user

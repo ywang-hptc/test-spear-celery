@@ -4,7 +4,7 @@ version: "3.12"
 services:
   app:
     build:
-      context: .
+      context: ./app
       dockerfile: Dockerfile
       args:
         - DEV=true
@@ -19,8 +19,13 @@ services:
       - DB_NAME=devdb
       - DB_USER=devuser
       - DB_PASS=changeme
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
       - postgres
+      - redis
+      - rabbitmq
+
 
   postgres:
     image: postgres:13-alpine
@@ -40,33 +45,24 @@ services:
       - "5672:5672"  # RabbitMQ default port
       - "15672:15672"  # RabbitMQ management UI
 
-  celery:
-    container_name: celery
-    build:
-      context: .
-      args:
-        - DEV=true
-    volumes:
-      - ./app:/app
-    environment:
-      - ALLOWED_HOSTS=localhost,127.0.0.1
-    depends_on:
-      - app
-      - rabbitmq
+
 
   celery-worker1:
     # TODO: create another folder for worker, instead of using the one in django
     container_name: celery-worker1
     build:
-      context: .
+      context: ./celery_worker
+      dockerfile: Dockerfile
       args:
         - DEV=true
     command: >
-      celery -A app worker --hostname=worker-spear-serverA@%h --loglevel=info --concurrency=1 -E
+      celery -A celerytask worker --hostname=worker-spear-serverA@%h --loglevel=info --concurrency=1 -E
     volumes:
-      - ./app:/app
+      - ./celery_worker:/app
     environment:
-      - ALLOWED_HOSTS=localhost,
+      - ALLOWED_HOSTS=localhost,app
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - QUEUE_API_HOST=app
       - QUEUE_API_PORT=8080
 
@@ -74,15 +70,18 @@ services:
   celery-worker2:
     container_name: celery-worker2
     build:
-      context: .
+      context: ./celery_worker
+      dockerfile: Dockerfile
       args:
         - DEV=true
     command: >
-      celery -A app worker --hostname=worker-spear-serverB@%h --loglevel=info --concurrency=1 -E
+      celery -A celerytask worker --hostname=worker-spear-serverB@%h --loglevel=info --concurrency=1 -E
     volumes:
-      - ./app:/app
+      - ./celery_worker:/app
     environment:
-      - ALLOWED_HOSTS=localhost,
+      - ALLOWED_HOSTS=localhost,app
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - QUEUE_API_HOST=app
       - QUEUE_API_PORT=8080
 
