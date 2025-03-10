@@ -13,7 +13,7 @@ app.conf.task_queues = [
     ),
     # Queue("dead_letter_queue", routing_key="dead_letter_queue"),
 ]
-celery_app.conf.task_acks_late = True
-celery_app.conf.task_default_priority = 5
-celery_app.conf.worker_prefetch_multiplier = 1
+app.conf.task_acks_late = True
+app.conf.task_default_priority = 5
+app.conf.worker_prefetch_multiplier = 1
 app.autodiscover_tasks()

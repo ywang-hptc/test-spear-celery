@@ -19,8 +19,8 @@ services:
       - DB_NAME=devdb
       - DB_USER=devuser
       - DB_PASS=changeme
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_BACKEND=redis://redis:6379/0
     depends_on:
       - postgres
       - redis
@@ -48,7 +48,6 @@ services:
 
 
   celery-worker1:
-    # TODO: create another folder for worker, instead of using the one in django
     container_name: celery-worker1
     build:
       context: ./celery_worker
@@ -61,8 +60,8 @@ services:
       - ./celery_worker:/app
     environment:
       - ALLOWED_HOSTS=localhost,app
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_BACKEND=redis://redis:6379/0
       - QUEUE_API_HOST=app
       - QUEUE_API_PORT=8080
 
@@ -80,8 +79,8 @@ services:
       - ./celery_worker:/app
     environment:
       - ALLOWED_HOSTS=localhost,app
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_BACKEND=redis://redis:6379/0
       - QUEUE_API_HOST=app
       - QUEUE_API_PORT=8080
 
@@ -91,9 +90,10 @@ services:
     ports:
       - 5555:5555
     environment:
-      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_BROKER=amqp://guest:guest@rabbitmq:5672//
     depends_on:
       - rabbitmq
+
 
   redis:
     image: redis:7.0.11-alpine
