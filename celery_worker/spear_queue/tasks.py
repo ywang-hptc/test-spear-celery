@@ -6,6 +6,7 @@ from celery import shared_task, Task
 from typing import Any
 import logging
 import requests
+from pytz import timezone
 
 # set basic config for a logger
 logger = logging.getLogger(__name__)
@@ -14,6 +15,9 @@ handler = logging.StreamHandler()
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+
+TIMEZONE = os.environ.get("TIMEZONE", "Europe/Amsterdam")
 
 
 @shared_task(queue="spear_tasks")
@@ -35,9 +39,10 @@ def handle_task_prerun(
 ):
     worker = os.environ.get("WORKER_NAME")
     logger.info(f"Task before task run: {task_id=}, {worker=}")
+    now = datetime.now(tz=timezone(TIMEZONE)).isoformat()
     payload = {
         "status": "RUNNING",
-        "started_at": datetime.now().isoformat(),
+        "started_at": now,
         "worker_name": worker,
     }
     logger.info(f"Payload prerun: {payload=}")
@@ -74,17 +79,18 @@ def handle_task_postrun(
     **_kwargs,
 ):
     worker = os.environ.get("WORKER_NAME")
+    now = datetime.now(tz=timezone(TIMEZONE)).isoformat()
     logger.info(f"Task after task run: {task_id=}, {state=}, {retval=}, {worker=}")
     if state == "SUCCESS":
         payload = {
             "status": state,
-            "completed_at": datetime.now().isoformat(),
+            "completed_at": now,
             "result": retval,
         }
     elif state == "FAILURE":
         payload = {
             "status": state,
-            "completed_at": datetime.now().isoformat(),
+            "completed_at": now,
             "error": str(retval),
         }
 

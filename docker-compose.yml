@@ -64,6 +64,7 @@ services:
       - CELERY_BACKEND=redis://redis:6379/0
       - QUEUE_API_HOST=app
       - QUEUE_API_PORT=8080
+      - TIMEZONE=Europe/Amsterdam
 
 
   celery-worker2:
@@ -83,6 +84,8 @@ services:
       - CELERY_BACKEND=redis://redis:6379/0
       - QUEUE_API_HOST=app
       - QUEUE_API_PORT=8080
+      - TIMEZONE=Europe/Amsterdam
+
 
   flower:
     image: mher/flower
