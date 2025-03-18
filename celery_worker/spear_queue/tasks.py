@@ -35,12 +35,12 @@ def handle_task_prerun(
 ):
     worker = os.environ.get("WORKER_NAME")
     logger.info(f"Task before task run: {task_id=}, {worker=}")
-
     payload = {
         "status": "RUNNING",
         "started_at": datetime.now().isoformat(),
         "worker_name": worker,
     }
+    logger.info(f"Payload prerun: {payload=}")
     request_headers = {
         "accept": "application/json",
         "Content-Type": "application/json",
@@ -50,6 +50,16 @@ def handle_task_prerun(
         json=payload,
         headers=request_headers,
     )
+    while response.status_code != 200:
+        logger.info(
+            "Update the Django backend failed, probably because the data is not registered yet, try again after 1 second"
+        )
+        time.sleep(1)
+        response = requests.patch(
+            f"http://{os.environ['QUEUE_API_HOST']}:{os.environ['QUEUE_API_PORT']}/api/spear_job/spear-jobs/{task_id}/",
+            json=payload,
+            headers=request_headers,
+        )
     logger.info(f"Response prerun: {response.status_code=} {response.text=}")
 
 
