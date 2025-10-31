@@ -9,11 +9,11 @@ services:
       args:
         - DEV=true
     ports:
-      - "8080:8080"
+      - "8999:8999"
     volumes:
       - ./app:/app
     command: >
-        sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8080"
+        sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8999"
     environment:
       - DB_HOST=postgres
       - DB_NAME=devdb
@@ -30,7 +30,7 @@ services:
   postgres:
     image: postgres:13-alpine
     ports:
-      - "5432:5432"
+      - "5499:5499"
     volumes:
       - dev-db-data:/C/Program Files/PostgreSQL/15/data
     environment:
