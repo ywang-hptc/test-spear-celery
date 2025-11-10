@@ -1,0 +1,20 @@
+trigger:
+    - main
+
+pool:
+    name: hptc-dock-app01
+
+steps:
+    - task: CopyFiles@2
+      inputs:
+          CleanTargetFolder: true
+          OverWrite: true
+          Contents: "**"
+          TargetFolder: "/opt/docker/spear-phase-2-queue-test"
+
+    - task: DockerCompose@0
+      displayName: "Run a Docker Compose command"
+      inputs:
+          dockerComposeFile: "/opt/docker/spear-phase-2-queue-test/docker-compose_test_devops.yml"
+          projectName: "spear-phase-2-queue-test"
+          dockerComposeCommand: "up -d --build"
