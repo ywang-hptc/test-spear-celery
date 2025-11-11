@@ -19,7 +19,7 @@ services:
       - DB_NAME=devdb
       - DB_USER=devuser
       - DB_PASS=changeme
-      - CELERY_BROKER=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_BROKER=amqp://guest:guest@rabbitmq:5672/VHOST
       - CELERY_BACKEND=redis://redis:6379/0
     depends_on:
       - postgres

@@ -1,28 +1,25 @@
 import os
 import time
+import logging
 from django.utils import timezone
 import celery.signals as celery_signals
-from celery import shared_task, Task
+from celery import shared_task
 from typing import Any
-import logging
 from spear_job_api.models import SpearJob
 import requests
 
-# set basic config for a logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
 
 
 @shared_task(queue="spear_tasks")
-def spear_job(priority: int, params: dict[str, Any]) -> str:
-    time.sleep(5)
-    logger.info(f"Running a spear job with priority {priority}")
-    # raise RuntimeError("This is a test error")
-    return f"Finish with priority {priority}, protocol: {params.get('protocol')}"
+def spear_job(
+    raystation_system: str, priority: int, workflow_name: str, workflow_config: str
+) -> None:
+    logger.info(f"Creating a spear job...")
+    logger.info(f"RayStation System: {raystation_system}")
+    logger.info(f"Priority: {priority}")
+    logger.info(f"Workflow Name: {workflow_name}")
+    logger.info(f"Workflow Config: {workflow_config}")
 
 
 @celery_signals.after_task_publish.connect(
@@ -31,6 +28,7 @@ def spear_job(priority: int, params: dict[str, Any]) -> str:
 def handle_task_after_task_publish(
     sender=None, headers: Any = None, body: dict[str, Any] = None, **_kwargs
 ):
+    """After task publish signal handler to create a SpearJob entry in the database."""
     logger.info(f"Task after task pubish: {headers=} {body=}")
     spear_job = SpearJob.objects.create(
         priority=body[1]["priority"],

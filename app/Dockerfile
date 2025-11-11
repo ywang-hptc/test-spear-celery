@@ -7,7 +7,7 @@ COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements.dev.txt /tmp/requirements.dev.txt
 COPY . /app
 WORKDIR /app
-EXPOSE 8080
+EXPOSE 8090
 
 # ARG will be overwritten by docker-compose
 ARG DEV=false
