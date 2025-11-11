@@ -76,10 +76,10 @@ class SpearJob(models.Model):
         if not self.worker_name:
             self.server_name = ""
 
-        elif "sp01" in self.worker_name.lower():
+        elif "sp1" in self.worker_name.lower():
             self.server_name = SpearServer.SP1
 
-        elif "sp02" in self.worker_name.lower():
+        elif "sp2" in self.worker_name.lower():
             self.server_name = SpearServer.SP2
 
         else:
