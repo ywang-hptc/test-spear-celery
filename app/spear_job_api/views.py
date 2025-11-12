@@ -13,6 +13,13 @@ from . import models
 from . import serializers
 
 
+class SpearJobCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    """Create a Spear job."""
+
+    queryset = models.SpearJob.objects.all()
+    serializer_class = serializers.SpearJobCreateSerializer
+
+
 class SpearJobViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,

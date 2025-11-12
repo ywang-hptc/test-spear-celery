@@ -1,4 +1,6 @@
+from django.contrib.auth import get_user_model
 from django.urls import reverse
+from rest_framework.test import APITestCase
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -8,7 +10,9 @@ from django.utils import timezone
 import pytz
 import datetime
 
-SPEAR_JOB_URL = reverse("spear_job_api:spearjob-list")
+# SPEAR_JOB_URL = reverse("spear_job_api:spearjob-list")
+SPEAR_JOB_CREATE_URL = reverse("spear_job_api:spearjob-list")
+# /api/spear_job/create/
 
 
 def detail_url(celery_id: str):
@@ -33,32 +37,37 @@ def create_spear_job(**params) -> models.SpearJob:
     return spear_job
 
 
-class SpearJobApiTests(TestCase):
+def create_user(email="user2example.com", password="testpass123"):
+    """Create and return a sample user."""
+    return get_user_model().objects.create_user(email, password)  # type: ignore
+
+
+class SpearJobApiTests(APITestCase):
     """Test authenticated API requests"""
 
     def setUp(self):
-        # setup an authenticated user
-        self.client = APIClient()
-
-    def test_create_spear_job(self):
-        """Test creating a recipe"""
-        models.RayStationSystem.objects.create(
+        self.system = models.RayStationSystem.objects.create(
             system_name="TestRayStationSystem", system_uid="UID9999"
         )
+
+    def test_create_spear_job(self):
+        """Test creating a spear job"""
         payload = {
             "patient_id": "patient_001",
             "priority": 1,
             "celery_job_id": "test12345",
             "workflow_name": "test_workflow_1",
-            "workflow_config": {"testkey": "testvalue"},
+            "workflow_config": {"plan": "A", "beam_set": 2},
             "raystation_system": "TestRayStationSystem",
         }
-        res = self.client.post(SPEAR_JOB_URL, payload)  # /api/recipe/recipes/
-
+        res = self.client.post(SPEAR_JOB_CREATE_URL, payload, format="json")
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        spear_job = models.SpearJob.objects.get(id=res.data["id"])
-        for k, v in payload.items():
-            self.assertEqual(getattr(spear_job, k), v)
+        spear_job = models.SpearJob.objects.get(celery_job_id=res.data["celery_job_id"])
+        self.assertEqual(spear_job.patient_id, payload["patient_id"])
+        self.assertEqual(spear_job.priority, payload["priority"])
+        self.assertEqual(spear_job.workflow_name, payload["workflow_name"])
+        self.assertEqual(spear_job.workflow_config, payload["workflow_config"])
+        self.assertEqual(spear_job.raystation_system, self.system)
 
     # def test_get_spear_job_detail(self):
     #     """Test get the detail of the spear job"""

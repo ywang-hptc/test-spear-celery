@@ -68,7 +68,7 @@ class SpearJob(models.Model):
         related_name="spear_jobs",
     )
     priority = models.SmallIntegerField(
-        default=5, validators=[MaxValueValidator(1), MinValueValidator(10)]
+        default=5, validators=[MaxValueValidator(10), MinValueValidator(1)]
     )
 
     def save(self, *args, **kwargs):
@@ -86,3 +86,6 @@ class SpearJob(models.Model):
             self.server_name = "Unknown Server"
 
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.patient_id} | {self.workflow_name} | {self.created_at: %Y-%m-%d %H:%M:%S}"

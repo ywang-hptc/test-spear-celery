@@ -19,6 +19,9 @@ class SpearJobAdmin(admin.ModelAdmin):
     )
     readonly_fields = (
         "celery_job_id",
+        "created_at",
+        "started_at",
+        "completed_at",
         "worker_name",
         "server_name",
         "latest_heartbeat",
