@@ -8,7 +8,9 @@ class SpearJobCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating a SpearJob."""
 
     raystation_system = serializers.SlugRelatedField(
-        queryset=models.RayStationSystem.objects.all(), slug_field="system_name"
+        queryset=models.RayStationSystem.objects.all(),
+        slug_field="system_name",
+        write_only=True,
     )
 
     class Meta:
@@ -23,13 +25,37 @@ class SpearJobCreateSerializer(serializers.ModelSerializer):
         ]
 
 
-class SpearJobSerializer(serializers.ModelSerializer):
-    """Serializer for the SpearJob model."""
+class SpearJobDetailSerializer(serializers.ModelSerializer):
+    """Serializer for retrieving a SpearJob."""
 
     raystation_system_name = serializers.SlugRelatedField(
-        queryset=models.RayStationSystem.objects.all(), slug_field="system_name"
+        source="raystation_system",
+        slug_field="system_name",
+        read_only=True,
+    )
+    raystation_system_uid = serializers.SlugRelatedField(
+        source="raystation_system",
+        slug_field="system_uid",
+        read_only=True,
     )
 
     class Meta:
         model = models.SpearJob
-        fields = "__all__"
+        fields = [
+            "id",
+            "patient_id",
+            "created_at",
+            "started_at",
+            "completed_at",
+            "status",
+            "logs",
+            "celery_job_id",
+            "worker_name",
+            "server_name",
+            "workflow_name",
+            "workflow_config",
+            "latest_heartbeat",
+            "raystation_system_name",
+            "raystation_system_uid",
+            "priority",
+        ]

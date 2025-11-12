@@ -5,8 +5,7 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register("create", views.SpearJobCreateViewSet, basename="spearjob")
-
+router.register("spear-jobs", views.SpearJobViewSet, basename="spearjob")
 
 app_name = "spear_job_api"
 

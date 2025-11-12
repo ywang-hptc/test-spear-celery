@@ -31,6 +31,6 @@ urlpatterns = [
         name="api-docs",
     ),
     path(
-        "api/spear_job/", include("spear_job_api.urls")
+        "api/", include("spear_job_api.urls")
     ),  # for rendering the schema to a swagger documentation
 ]

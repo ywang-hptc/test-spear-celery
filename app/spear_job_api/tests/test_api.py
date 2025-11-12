@@ -5,19 +5,19 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 from spear_job_api import models
-from spear_job_api.serializers import SpearJobSerializer
+from spear_job_api.serializers import SpearJobCreateSerializer, SpearJobDetailSerializer
 from django.utils import timezone
 import pytz
 import datetime
 
-# SPEAR_JOB_URL = reverse("spear_job_api:spearjob-list")
-SPEAR_JOB_CREATE_URL = reverse("spear_job_api:spearjob-list")
-# /api/spear_job/create/
+SPEAR_JOB_URL = reverse("spear_job_api:spearjob-list")
+# /api/spear-jobs/
 
 
-def detail_url(celery_id: str):
-    """Create and return a recipe detail URL."""
-    return reverse("spear_job_api:spearjob-detail", args=[celery_id])
+def detail_url(spear_job_id: str):
+    """Create and return a spear job detail URL."""
+    # /api/spear-jobs/{spear_job_id}/
+    return reverse("spear_job_api:spearjob-detail", args=[spear_job_id])
 
 
 def create_spear_job(**params) -> models.SpearJob:
@@ -46,7 +46,7 @@ class SpearJobApiTests(APITestCase):
     """Test authenticated API requests"""
 
     def setUp(self):
-        self.system = models.RayStationSystem.objects.create(
+        self.raystation_system = models.RayStationSystem.objects.create(
             system_name="TestRayStationSystem", system_uid="UID9999"
         )
 
@@ -57,26 +57,36 @@ class SpearJobApiTests(APITestCase):
             "priority": 1,
             "celery_job_id": "test12345",
             "workflow_name": "test_workflow_1",
-            "workflow_config": {"plan": "A", "beam_set": 2},
+            "workflow_config": {"plan": "A", "beam_number": 2},
             "raystation_system": "TestRayStationSystem",
         }
-        res = self.client.post(SPEAR_JOB_CREATE_URL, payload, format="json")
+        res = self.client.post(SPEAR_JOB_URL, payload, format="json")
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         spear_job = models.SpearJob.objects.get(celery_job_id=res.data["celery_job_id"])
         self.assertEqual(spear_job.patient_id, payload["patient_id"])
         self.assertEqual(spear_job.priority, payload["priority"])
         self.assertEqual(spear_job.workflow_name, payload["workflow_name"])
         self.assertEqual(spear_job.workflow_config, payload["workflow_config"])
-        self.assertEqual(spear_job.raystation_system, self.system)
+        self.assertEqual(spear_job.raystation_system, self.raystation_system)
 
-    # def test_get_spear_job_detail(self):
-    #     """Test get the detail of the spear job"""
-    #     spear_job = create_spear_job(celery_job_id="test1234")
-    #     url = detail_url(celery_id="test1234")
-    #     res = self.client.get(url)
-    #     self.assertEqual(res.status_code, status.HTTP_200_OK)
-    #     serializer = SpearJobSerializer(spear_job)
-    #     self.assertEqual(res.data, serializer.data)
+    def test_get_spear_job_detail(self):
+        """Test get the detail of the spear job by job id in the url"""
+        spear_job = create_spear_job(
+            patient_id="patient_002",
+            priority=3,
+            celery_job_id="test112233",
+            workflow_name="test_workflow_2",
+            workflow_config={"plan": "B", "beam_number": 123},
+            raystation_system=self.raystation_system,
+        )
+        spear_job_id = spear_job.id
+        url = detail_url(spear_job_id=spear_job_id)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        serializer = SpearJobDetailSerializer(spear_job)
+        self.assertEqual(res.data["raystation_system_name"], "TestRayStationSystem")
+        self.assertEqual(res.data["raystation_system_uid"], "UID9999")
+        self.assertEqual(res.data, serializer.data)
 
     # def test_partial_update_spear_job_prerun(self):
     #     """Test updating a spear job data with patch, changing status to RUNNING"""
