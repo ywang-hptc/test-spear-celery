@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 
 
 class SpearServer(models.TextChoices):
@@ -49,9 +49,20 @@ class SpearJob(models.Model):
         default=SpearJobStatus.PENDING,
     )
     logs = models.TextField(null=True, blank=True)
+
+    # We use CharField instead of UUIDField because somehow we cannot pass unittest
+    # when query the job by celery_job_id if we use UUIDField.
+    # Another advantage of using charfield is that we can test it more flexiblely.
     celery_job_id = models.CharField(
-        max_length=100,
+        max_length=36,  # enough for UUID like '9f7f5b8e-2a3d-4a04-86c0-8d0a2b8e2c11'
         unique=True,
+        validators=[
+            RegexValidator(
+                regex=r"^[0-9a-f-]+$",
+                message="celery_job_id must contain only lowercase hex digits and hyphens.",
+            )
+        ],
+        help_text="UUID-like job ID (lowercase hex + dashes)",
     )
     worker_name = models.CharField(max_length=100, null=True, blank=True)
     server_name = models.CharField(

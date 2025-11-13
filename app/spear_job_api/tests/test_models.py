@@ -43,7 +43,7 @@ class TestSpearJobModel(TestCase):
         spear_job = models.SpearJob.objects.create(
             patient_id="test_pid",
             priority=1,
-            celery_job_id="test_celery_id",
+            celery_job_id="abcd1234",
             workflow_config={},
             workflow_name="test_workflow",
             raystation_system=models.RayStationSystem.objects.create(
