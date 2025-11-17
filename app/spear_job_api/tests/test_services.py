@@ -153,3 +153,44 @@ class TestSpearJobServices(TestCase):
 
         errors = context.exception.detail
         self.assertIn("status", errors)
+
+    def test_revoke_spear_job_by_from_spear_id_success(self):
+        """Test successful revocation of a spear job via service layer."""
+        spear_job = models.SpearJob.objects.create(
+            patient_id="11223344",
+            celery_job_id="7a4b5a64-ec4e-4a0f-a3e6-1c8dc3c977fb",
+            workflow_name="initial_workflow",
+            workflow_config={"param1": "value1"},
+            raystation_system=self.raystation_system,
+            priority=3,
+            status="RUNNING",
+        )
+        self.assertEqual(spear_job.status, "RUNNING")
+        revoked_job = services.revoke_spear_job(spear_job_id=spear_job.id)
+        self.assertEqual(revoked_job.status, "REVOKED")
+
+    def test_revoke_spear_job_by_from_celery_id_success(self):
+        """Test successful revocation of a spear job via service layer using celery_job_id."""
+        spear_job = models.SpearJob.objects.create(
+            patient_id="11223344",
+            celery_job_id="7a4b5a64-ec4e-4a0f-a3e6-1c8dc3c977fb",
+            workflow_name="initial_workflow",
+            workflow_config={"param1": "value1"},
+            raystation_system=self.raystation_system,
+            priority=3,
+            status="RUNNING",
+        )
+        self.assertEqual(spear_job.status, "RUNNING")
+        revoked_job = services.revoke_spear_job(
+            celery_job_id="7a4b5a64-ec4e-4a0f-a3e6-1c8dc3c977fb"
+        )
+        self.assertEqual(revoked_job.status, "REVOKED")
+
+    def test_revoke_spear_job_no_identifier_error(self):
+        """Test that revoking a spear job without an identifier raises ValueError."""
+        with self.assertRaises(ValueError) as context:
+            services.revoke_spear_job(spear_job_id=None, celery_job_id=None)
+
+        self.assertEqual(
+            str(context.exception), "Provide either spear_job_id or celery_job_id."
+        )

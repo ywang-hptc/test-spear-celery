@@ -18,6 +18,7 @@ class SpearJobStatus(models.TextChoices):
     RUNNING = "RUNNING", "Running"
     COMPLETED = "COMPLETED", "Completed"
     FAILED = "FAILED", "Failed"
+    REVOKED = "REVOKED", "Revoked"
 
 
 class RayStationSystem(models.Model):
