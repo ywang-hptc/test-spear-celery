@@ -15,6 +15,7 @@ class SpearJobStatus(models.TextChoices):
     """The available Spear job statuses."""
 
     PENDING = "PENDING", "Pending"
+    QUEUED = "QUEUED", "Queued"
     RUNNING = "RUNNING", "Running"
     COMPLETED = "COMPLETED", "Completed"
     FAILED = "FAILED", "Failed"

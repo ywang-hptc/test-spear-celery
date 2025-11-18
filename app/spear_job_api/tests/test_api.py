@@ -65,6 +65,7 @@ class SpearJobApiTests(APITestCase):
             "workflow_name": "test_workflow_1",
             "workflow_config": {"plan": "A", "beam_number": 2},
             "raystation_system": "TestRayStationSystem",
+            "status": "QUEUED",
         }
         res = self.client.post(SPEAR_JOB_URL, payload, format="json")
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)

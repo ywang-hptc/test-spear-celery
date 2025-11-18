@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 @shared_task(queue="spear_tasks", bind=True)
 def enqueue_spear_job(
+    self,
     payload: dict[str, Any],
 ) -> None:
     """Enqueue a spear job task.
@@ -33,8 +34,9 @@ def handle_task_after_task_publish(
     logger.info("The spear job has been published")
     logger.debug(f"Published task: {headers=}, {body=}")
     payload = body[1]["payload"]
-    # Inject the celery job id into the payload
+    # Inject the celery job id and status into the payload
     payload["celery_job_id"] = headers["id"]
+    payload["status"] = "QUEUED"
     create_spear_job(data=payload)
 
 
