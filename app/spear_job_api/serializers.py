@@ -13,6 +13,7 @@ class SpearJobCreateSerializer(serializers.ModelSerializer):
         write_only=True,
     )
     celery_job_id = serializers.UUIDField()
+    print(raystation_system)
 
     class Meta:
         model = models.SpearJob

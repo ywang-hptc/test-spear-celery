@@ -8,12 +8,8 @@ from spear_job_api.services import create_spear_job
 logger = logging.getLogger(__name__)
 
 
-# TODO: create spear_job in the published signal
-@shared_task(
-    queue="spear_tasks", bind=True
-)  # Bind so that we can access 'self' and get the task id
+@shared_task(queue="spear_tasks", bind=True)
 def enqueue_spear_job(
-    self,
     payload: dict[str, Any],
 ) -> None:
     """Enqueue a spear job task.
@@ -25,16 +21,6 @@ def enqueue_spear_job(
         - workflow_config: dict[str, Any]
     """
     logger.info(f"Enqueue spear job task started with payload: {payload}")
-    # task_id = self.request.id
-
-    # Inject the celery job id into the payload
-    # payload["celery_job_id"] = task_id
-    # logger.info(f"Enqueue spear job task started: {task_id=}, {payload=}")
-
-    # Create the SpearJob entry in the database
-    # spear_job = create_spear_job(data=payload)
-
-    # logger.info(f"Enqueue spear job task started: {task_id=}, {spear_job=}")
 
 
 @celery_signals.after_task_publish.connect(
@@ -46,6 +32,10 @@ def handle_task_after_task_publish(
     """After task publish signal handler to create a SpearJob entry in the database."""
     logger.info("The spear job has been published")
     logger.debug(f"Published task: {headers=}, {body=}")
+    payload = body[1]["payload"]
+    # Inject the celery job id into the payload
+    payload["celery_job_id"] = headers["id"]
+    create_spear_job(data=payload)
 
 
 # @celery_signals.task_prerun.connect(sender=spear_job)

@@ -16,13 +16,14 @@ from .serializers import (
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from . import models
-from .services import create_spear_job
+from .services import create_spear_job, update_spear_job
 
 
 class SpearJobViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
     """Create a Spear job."""
@@ -44,7 +45,7 @@ class SpearJobViewSet(
 
     def perform_create(self, serializer):
         """Create a Spear job using the service layer."""
-        create_spear_job(data=serializer.validated_data)
+        create_spear_job(data=self.request.data)
 
     @action(
         detail=False,

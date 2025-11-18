@@ -247,3 +247,27 @@ class SpearJobApiTests(APITestCase):
             spear_job.logs,
             "First log entry.\nSecond log entry.\nThird log entry.\nFourth log entry.",
         )
+
+    def test_list_jobs(self):
+        # create a couple of jobs in the DB...
+        spear_job1 = create_spear_job(
+            patient_id="patient_010",
+            priority=3,
+            celery_job_id="a4ff3ae9-9cbe-4c77-1910-28bb22a3a1b6",
+            workflow_name="test_workflow_7",
+            workflow_config={"plan": "FF", "beam_number": 3},
+            raystation_system=self.raystation_system,
+        )
+        spear_job2 = create_spear_job(
+            patient_id="patient_011",
+            priority=4,
+            celery_job_id="e",
+            workflow_name="test_workflow_7",
+            workflow_config={"plan": "FF", "beam_number": 3},
+            raystation_system=self.raystation_system,
+        )
+        url = reverse("spear_job_api:spearjob-list")
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(resp.data, list)
+        self.assertEqual(len(resp.data), 2)
