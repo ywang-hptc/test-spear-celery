@@ -102,3 +102,15 @@ class SpearJob(models.Model):
 
     def __str__(self):
         return f"{self.patient_id} | {self.workflow_name} | {self.created_at: %Y-%m-%d %H:%M:%S}"
+
+
+class SpearWorkflowTemplate(models.Model):
+    """Model representing a Spear workflow template."""
+
+    name = models.CharField(max_length=200, unique=True)
+    description = models.TextField(null=True, blank=True)
+    default_config = models.JSONField(null=True, blank=True)
+    enabled = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name

@@ -1,0 +1,38 @@
+{
+  "General": {
+    "ProtocolName": "Test Spear Phase 2 HN",
+    "VersionNumber": "0.1-dev",
+    "Type": "Planning",
+    "3D/4D": "3D"
+  },
+  "Load Patient": [
+    {
+      "LoadPatient": {
+        "Patient ID": {
+          "value": "",
+          "filled_by_user": true
+        }
+      }
+    }
+  ],
+  "Data Processing": [
+    {
+      "RenameGroupImages": {
+        "Type": {
+          "value": "3D",
+          "filled_by_user": false
+        }
+      }
+    },
+    { "SetImagingSystem": {} },
+    {
+      "SetBodySite": {
+        "BodySite": {
+          "value": "Oropharynx",
+          "filled_by_user": false,
+          "options": "BodySiteOptions"
+        }
+      }
+    }
+  ]
+}
