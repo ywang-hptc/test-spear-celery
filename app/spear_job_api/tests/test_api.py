@@ -1,3 +1,4 @@
+from unittest.mock import patch, MagicMock
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework.test import APITestCase
@@ -12,9 +13,10 @@ import datetime
 
 SPEAR_JOB_URL = reverse("spear_job_api:spearjob-list")
 # /api/spear-jobs/
+SPEAR_WORKFLOW_URL = reverse("spear_job_api:spearworkflow-list")
 
 
-def detail_url(spear_job_id: str):
+def spear_job_detail_url(spear_job_id: str):
     """Create and return a spear job detail URL."""
     # /api/spear-jobs/{spear_job_id}/
     return reverse("spear_job_api:spearjob-detail", args=[spear_job_id])
@@ -24,6 +26,12 @@ def celery_job_id_url(celery_job_id: str):
     """Create and return a spear job detail URL by celery job id."""
     # /api/spear-jobs/by-celery/{celery_job_id}/
     return reverse("spear_job_api:spearjob-by-celery-job-id", args=[celery_job_id])
+
+
+def spear_workflow_detail_url(workflow_name: str):
+    """Create and return a spear workflow detail URL."""
+    # /api/spear-workflows/{workflow_name}/
+    return reverse("spear_job_api:spearworkflow-detail", args=[workflow_name])
 
 
 def create_spear_job(**params) -> models.SpearJob:
@@ -88,7 +96,7 @@ class SpearJobApiTests(APITestCase):
             raystation_system=self.raystation_system,
         )
         spear_job_id = spear_job.id
-        url = detail_url(spear_job_id=spear_job_id)
+        url = spear_job_detail_url(spear_job_id=spear_job_id)
         res = self.client.get(url)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         serializer = SpearJobDetailSerializer(spear_job)
@@ -132,7 +140,7 @@ class SpearJobApiTests(APITestCase):
             workflow_config={"plan": "D", "beam_number": 888},
             raystation_system=self.raystation_system,
         )
-        url = detail_url(spear_job_id=spear_job.id)
+        url = spear_job_detail_url(spear_job_id=spear_job.id)
         payload = {
             "status": "RUNNING",
             "started_at": datetime.datetime(
@@ -163,7 +171,7 @@ class SpearJobApiTests(APITestCase):
             workflow_config={"plan": "EE", "beam_number": 1},
             raystation_system=self.raystation_system,
         )
-        url = detail_url(spear_job_id=spear_job.id)
+        url = spear_job_detail_url(spear_job_id=spear_job.id)
         payload = {
             "status": "COMPLETED",
             "completed_at": datetime.datetime(
@@ -191,7 +199,7 @@ class SpearJobApiTests(APITestCase):
             workflow_config={"plan": "DD", "beam_number": 2},
             raystation_system=self.raystation_system,
         )
-        url = detail_url(spear_job_id=spear_job.id)
+        url = spear_job_detail_url(spear_job_id=spear_job.id)
         payload = {
             "status": "FAILED",
             "completed_at": datetime.datetime(
@@ -219,7 +227,7 @@ class SpearJobApiTests(APITestCase):
             workflow_config={"plan": "FF", "beam_number": 3},
             raystation_system=self.raystation_system,
         )
-        url = detail_url(spear_job_id=spear_job.id)
+        url = spear_job_detail_url(spear_job_id=spear_job.id)
         payload1 = {
             "append_log": "First log entry.",
         }
@@ -272,3 +280,69 @@ class SpearJobApiTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertIsInstance(resp.data, list)
         self.assertEqual(len(resp.data), 2)
+
+
+class SpearWorkflowApiTests(APITestCase):
+    """Test Spear Workflow API requests"""
+
+    @patch("spear_job_api.services.resources.files")
+    def test_list_spear_workflows_success(self, mock_files):
+        """Test listing available spear workflows"""
+        mock_path1 = MagicMock()
+        mock_path1.suffix = ".json"
+        mock_path1.stem = "workflow_1"
+        mock_path2 = MagicMock()
+        mock_path2.suffix = ".json"
+        mock_path2.stem = "workflow_2"
+        mock_path3 = MagicMock()
+        mock_path3.suffix = ".txt"  # should be ignored
+        mock_path3.stem = "not_a_workflow"
+
+        mock_files.return_value.iterdir.return_value = [
+            mock_path1,
+            mock_path2,
+            mock_path3,
+        ]
+
+        url = reverse("spear_job_api:spearworkflow-list")
+        res = self.client.get(url)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(["workflow_1", "workflow_2"], res.data)
+
+    @patch("spear_job_api.services.resources.read_text")
+    def test_retrieve_spear_workflow_success(self, mock_read_text):
+        """Test retrieving a spear workflow configuration successfully"""
+        mock_read_text.return_value = (
+            '{"workflow_key1": "workflow_value1", "workflow_key2": 2}'
+        )
+
+        workflow_name = "workflow_a"
+        url = spear_workflow_detail_url(workflow_name=workflow_name)
+        res = self.client.get(url)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            res.data, {"workflow_key1": "workflow_value1", "workflow_key2": 2}
+        )
+        mock_read_text.assert_called_once_with(
+            "spear_job_api.spear_workflows",
+            f"{workflow_name}.json",
+            encoding="utf-8",
+        )
+
+    def test_retrieve_spear_workflow_not_found(self):
+        """Test retrieving a non-existent spear workflow returns 404"""
+        workflow_name = "non_existent_workflow"
+        url = spear_workflow_detail_url(workflow_name=workflow_name)
+        res = self.client.get(url)
+
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    def tset_retrieve_spear_workflow_no_name(self):
+        """Test retrieving a spear workflow with no name returns 404"""
+        workflow_name = ""
+        url = spear_workflow_detail_url(workflow_name=workflow_name)
+        res = self.client.get(url)
+
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)

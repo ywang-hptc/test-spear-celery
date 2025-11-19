@@ -1,4 +1,5 @@
 from django.test import TestCase
+from unittest.mock import patch, MagicMock
 from spear_job_api import models
 from spear_job_api import services
 from rest_framework import serializers
@@ -193,4 +194,60 @@ class TestSpearJobServices(TestCase):
 
         self.assertEqual(
             str(context.exception), "Provide either spear_job_id or celery_job_id."
+        )
+
+
+class TestSpearWorkflowConfigLoading(TestCase):
+    @patch("spear_job_api.services.resources.files")
+    def test_list_workflow_files(self, mock_files):
+        # Create fake Path objects
+        fake_path_1 = MagicMock()
+        fake_path_1.stem = "test_workflow_1"
+        fake_path_1.suffix = ".json"
+
+        fake_path_2 = MagicMock()
+        fake_path_2.stem = "test_workflow_2"
+        fake_path_2.suffix = ".json"
+
+        fake_non_json = MagicMock()
+        fake_non_json.stem = "non_workflow_file"
+        fake_non_json.suffix = ".txt"
+
+        # Mock pkg.iterdir()
+        fake_pkg = MagicMock()
+        fake_pkg.iterdir.return_value = [fake_path_2, fake_non_json, fake_path_1]
+
+        mock_files.return_value = fake_pkg
+
+        result = services.list_workflow_files()
+
+        self.assertEqual(result, ["test_workflow_1", "test_workflow_2"])
+
+    def test_load_spear_workflow_config_no_filename(self):
+        """Test loading workflow config with no filename raises FileNotFoundError."""
+        with self.assertRaises(FileNotFoundError) as context:
+            services.load_spear_workflow_config(filename=None)
+
+    def test_load_spear_workflow_config_file_not_found(self):
+        """Test loading workflow config with non-existent filename raises FileNotFoundError."""
+        with self.assertRaises(FileNotFoundError) as context:
+            services.load_spear_workflow_config(filename="non_existent_workflow")
+
+    @patch("spear_job_api.services.resources.read_text")
+    def test_load_spear_workflow_config_success(self, mock_read_text):
+        """Test successful loading of a workflow config."""
+        mock_read_text.return_value = (
+            '{"workflow_key1": "workflow_value1", "workflow_key2": 2}'
+        )
+
+        config = services.load_spear_workflow_config("workflow_b")
+
+        mock_read_text.assert_called_once_with(
+            "spear_job_api.spear_workflows",
+            "workflow_b.json",
+            encoding="utf-8",
+        )
+
+        self.assertEqual(
+            config, {"workflow_key1": "workflow_value1", "workflow_key2": 2}
         )

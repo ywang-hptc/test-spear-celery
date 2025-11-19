@@ -1,3 +1,5 @@
+import json
+from importlib import resources
 from typing import Optional
 from django.db import transaction
 from .serializers import SpearJobCreateSerializer, SpearJobUpdateSerializer
@@ -21,7 +23,7 @@ def update_spear_job(
     *,
     spear_job_id: Optional[int] = None,
     celery_job_id: Optional[str] = None,
-    data: dict
+    data: dict,
 ):
     """
     Service layer function to update a SpearJob using SpearJobUpdateSerializer.
@@ -62,3 +64,32 @@ def revoke_spear_job(
     job.status = "REVOKED"
     job.save()
     return job
+
+
+def load_spear_workflow_config(filename: str | None) -> dict:
+    """Load Spear workflow configuration from a JSON file."""
+    if not filename:
+        raise FileNotFoundError("No filename provided for workflow configuration.")
+    filename = f"{filename}.json"
+    text = resources.read_text(
+        "spear_job_api.spear_workflows",
+        filename,
+        encoding="utf-8",
+    )
+    return json.loads(text)
+
+
+def list_workflow_files() -> list[str]:
+    """
+    Return a list of workflow config filenames (without .json extension)
+    stored under spear_job_api/spear_workflows/.
+    """
+    pkg = resources.files("spear_job_api.spear_workflows")
+
+    workflow_files = [
+        path.stem  # 'workflow_a' instead of 'workflow_a.json'
+        for path in pkg.iterdir()
+        if path.suffix.lower() == ".json"
+    ]
+
+    return sorted(workflow_files)

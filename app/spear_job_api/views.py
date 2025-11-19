@@ -16,7 +16,12 @@ from .serializers import (
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from . import models
-from .services import create_spear_job, update_spear_job
+from .services import (
+    create_spear_job,
+    update_spear_job,
+    list_workflow_files,
+    load_spear_workflow_config,
+)
 
 
 class SpearJobViewSet(
@@ -67,3 +72,30 @@ class SpearJobViewSet(
         # ensure row lock during append to avoid lost updates
         self.get_object()  # fetches instance; DB transaction + save()
         return super().partial_update(request, *args, **kwargs)
+
+
+class SpearWorkflowViewSet(viewsets.ViewSet):
+    """ViewSet to list available Spear workflows."""
+
+    lookup_field = "workflow_name"
+    lookup_url_kwarg = "workflow_name"
+
+    def list(self, request):
+        """List available Spear workflows."""
+
+        workflows = list_workflow_files()
+        return Response(workflows)
+
+    def retrieve(self, request, workflow_name=None):
+        """
+        Retrieve the JSON config for the workflow named <pk>.
+        Example: GET /spearworkflows/workflow_a/
+        """
+        try:
+            config = load_spear_workflow_config(workflow_name)
+        except FileNotFoundError:
+            return Response(
+                {"detail": f"Workflow '{workflow_name}' not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(config)

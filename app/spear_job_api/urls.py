@@ -6,6 +6,7 @@ from . import views
 
 router = DefaultRouter()
 router.register("spear-jobs", views.SpearJobViewSet, basename="spearjob")
+router.register("spear-workflows", views.SpearWorkflowViewSet, basename="spearworkflow")
 
 app_name = "spear_job_api"
 
